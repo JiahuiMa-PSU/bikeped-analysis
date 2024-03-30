@@ -22,12 +22,12 @@ library(tidyverse)
 library(plotly)
 library(shiny)
 
-## compile data file into: state functional_classification start_time(yyyy-mm-dd) 
+## make sure to compile data file into three columns: state, functional_classification, start_time (formatted as yyyy-mm-dd) 
+## read in data and mutate "month" and "year"
 
 monthly <- read_csv('data/month_state_fc_avg.csv')
 monthly2019 <- read_csv('data/month_state_fc_avg2019.csv')
 
-## read in data and mutate "month" and "year" 
 monthly <- bind_rows(monthly, monthly2019) %>%
   mutate(month = factor(format(as.Date(start_time), "%b"), levels = month.abb)) %>%
   mutate(year = as.integer(format(start_time, "%Y")))
