@@ -1,0 +1,124 @@
+---
+title: "Monthly bike volume trend using data from three states (2019-2023)"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: menu
+    
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r global, include=FALSE}
+
+library(flexdashboard)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(tidyverse)
+library(plotly)
+library(shiny)
+
+## compile data file into: state functional_classification start_time(yyyy-mm-dd) 
+
+monthly <- read_csv('data/month_state_fc_avg.csv')
+monthly2019 <- read_csv('data/month_state_fc_avg2019.csv')
+
+## read in data and mutate "month" and "year" 
+monthly <- bind_rows(monthly, monthly2019) %>%
+  mutate(month = factor(format(as.Date(start_time), "%b"), levels = month.abb)) %>%
+  mutate(year = as.integer(format(start_time, "%Y")))
+
+
+```
+
+Sidebar {.sidebar}
+======================================================================
+```{r echo = FALSE}
+tags$br()
+# Define inputs
+selectInput("stateInput", "Select a State", choices = unique(monthly$state))
+
+selectInput("funcClassInput", "Select a Functional Classification", choices = unique(monthly$functional_classification))
+
+selectInput("yearInput", "Select a year", choices = unique(monthly$year))
+
+```
+
+Use the upper plot to see the monthly volume change through the years for your chosen state and functional classification.
+
+Use the lower plot to compare the three states for your chosen year and functional classification.
+<br>
+<br>
+<br>
+<br>
+Application author: [Jiahui Ma](www.linkedin.com/in/jiahui-ma-988623105)
+
+Data source: [BikePed Portal](https://bikeped.trec.pdx.edu/)
+
+Plots
+======================================================================
+Row
+-----------------------------------------------------------------------
+
+### Single state: comparison over time (2019-2023) for selected facility type
+
+```{r echo = FALSE}
+
+# Server logic to create reactive Plotly plot based on user input
+output$trafficVolumePlot = renderPlotly({
+  
+  # Reactive expression to filter dataset based on user input
+  filtered_data <- reactive({
+    monthly %>%
+      filter(state == input$stateInput, functional_classification == input$funcClassInput)
+  })
+  
+  # Create the Plotly object
+  p <- plot_ly(data = filtered_data(), x = ~month, y = ~avg_volume, color = ~factor(year), type = 'scatter', mode = 'lines+markers',
+               line = list(width = 2), marker = list(size = 10)) %>%
+      layout(title = paste("Monthly Change in Average Volume for", input$stateInput, "&", input$funcClassInput),
+             xaxis = list(title = "Month"),
+             yaxis = list(title = "Average Volume"),
+             legend = list(title = list(text='Year')))
+  
+  p # Return the plot
+})
+
+# Render the Plotly plot
+plotlyOutput("trafficVolumePlot")
+
+```
+
+Row
+-----------------------------------------------------------------------
+### Comparison between three states for selected year and facility type
+``` {r echo = FALSE}
+
+# Server logic to create reactive Plotly plot based on user input
+output$statesPlot = renderPlotly({
+  
+  # Reactive expression to filter dataset based on user input
+  filtered_data <- reactive({
+    monthly %>%
+      filter(year == input$yearInput, functional_classification == input$funcClassInput)
+  })
+  
+  # Create the Plotly object
+  p2 <- plot_ly(data = filtered_data(), x = ~month, y = ~avg_volume, color = ~state, type = 'scatter', mode = 'lines+markers',
+               line = list(width = 2), marker = list(size = 10)) %>%
+      layout(title = paste("Monthly Change in Average Volume for", input$yearInput, "&", input$funcClassInput),
+             xaxis = list(title = "Month"),
+             yaxis = list(title = "Average Volume"))
+             legend = list(title = list(text='State'))
+  
+  p2 # Return the plot
+})
+
+# Render the Plotly plot
+plotlyOutput("statesPlot")
+
+```
