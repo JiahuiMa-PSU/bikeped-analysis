@@ -3,7 +3,7 @@
     "path": "~/Desktop/PDX/RA/BikePed_Portal/Analysis/bikeped-analysis/dashboard.Rmd",
     "project_path": "dashboard.Rmd",
     "type": "r_markdown",
-    "hash": "0",
+    "hash": "979431247",
     "contents": "",
     "dirty": false,
     "created": 1711770008398.0,
@@ -12,16 +12,16 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "38,39",
+        "cursorPosition": "40,49",
         "scrollLine": "24",
         "last_setup_crc32": "414fcbe7bb338d19"
     },
     "folds": "",
-    "lastKnownWriteTime": 1714681159,
+    "lastKnownWriteTime": 1714685445,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1714681159562,
+    "last_content_update": 1714685565658,
     "read_only": false,
     "read_only_alternatives": []
 }
