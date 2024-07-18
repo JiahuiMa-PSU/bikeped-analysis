@@ -1,28 +1,46 @@
-
-
+# Load necessary libraries
 library(shiny)
+library(leaflet)
 library(dplyr)
+library(tidyr)
 library(readr)
 library(ggplot2)
 library(plotly)
-library(leaflet)
+
+# Load the data
+
+madt <- read_csv('www/madt.csv') 
+segment_area <- read_csv('www/segment_info.csv')
 
 
+seasonal_ratios <- madt %>%
+  filter(flow_type == "bike") %>% 
+  group_by(segment_area_id, segment_name, state, city, functional_classification, year) %>%
+  summarize(
+    highest_volume = max(volume, na.rm = TRUE),
+    high_vol_month = month[which.max(volume)],
+    lowest_volume = min(volume, na.rm = TRUE),
+    low_vol_month = month[which.min(volume)],
+    count = n(), .groups = 'drop'
+  ) %>%
+  mutate(seasonal_ratio = if_else(count == 12, highest_volume / lowest_volume, NA_real_)) %>%
+  select(-count) %>% 
+  ungroup() 
 
-# monthly mean daily volume by detectors
-monthly_mean <- read.csv('www/mean_daily_vol_per_month.csv')
-
-monthly_mean <- monthly_mean %>%
-  mutate(month = factor(format(as.Date(date), "%b"), levels = month.abb),
-         year = as.integer(format(as.Date(date), "%Y")))
-# average daily volume by functional classification
-monthly_mean_function <- monthly_mean %>%
-  group_by(state, functional_classification, month, year) %>%
-  summarize(avg_daily_vol = mean(mean_volume)) %>% 
-  mutate_if(is.numeric, round, 2)
-# average daily volume by facility type
-monthly_mean_facility <- monthly_mean %>%
-  group_by(state, facility_type, month, year) %>%
-  summarize(avg_daily_vol = mean(mean_volume)) %>% 
-  mutate_if(is.numeric, round, 2)
-
+num_distinct_segment_state <- madt %>%
+  group_by(state, functional_classification) %>%
+  summarize(num_distinct_segment_areas = n_distinct(segment_area_id)) %>%
+  ungroup()%>%
+  bind_rows(
+    madt %>%
+      group_by(state) %>%
+      summarize(num_distinct_segment_areas = n_distinct(segment_area_id)) %>%
+      mutate(functional_classification = "Total")
+  ) %>%
+  pivot_wider(
+    names_from = state,
+    values_from = num_distinct_segment_areas,
+    values_fill = list(num_distinct_segment_areas = 0)  # Fill missing values with 0
+  ) %>% 
+  mutate(Total = DC+MD+VA)
+ 
